@@ -133,8 +133,6 @@ print(f"MPS Built: {torch.backends.mps.is_built()}")
 
 ### Current Milestone: 1 - Project Setup ✅
 
-Follow the [ROADMAP.md](ROADMAP.md) for the complete 28-milestone development plan.
-
 ### Running Tests
 
 ```bash
@@ -215,21 +213,5 @@ print(response.json())
    - Implement exponential backoff
    - Use multiple API keys (if allowed)
 
-## 📝 License
 
-[Add your license here]
-
-## 👥 Contributors
-
-- 1 ML Engineer (Solo Project)
-
-## 📧 Contact
-
-[Add contact information]
-
----
-
-**Timeline**: 28 weeks (7 months)  
-**Budget**: ~$1k/month (GCP)  
-**Status**: Milestone 1 Complete ✅
 

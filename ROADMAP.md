@@ -2,10 +2,12 @@
 
 **Objective**: Develop a platform that ingests daily financial news (up to 2000 articles/day from Alpha Vantage, Investing.com API) and historical stock prices (Yahoo Finance, 5 years) to predict direction (up/down) and % change buckets for Nasdaq-100, FOREX, and S&P Futures, with daily feature updates. Built by one ML engineer, developed locally on Mac (M1/M2, 16GB RAM), deployed on GCP. Each milestone = 1 week of work.
 
-## Milestone 1: Project Setup
+## Milestone 1: Project Setup ✅
+- **Status**: COMPLETED (Oct 11, 2025)
 - **Tasks**: Set up Python environment (PyTorch, Hugging Face Transformers, FastAPI, Datasets). Install dependencies (pandas, yfinance, requests). Create project repo (Git).
 - **Deliverables**: Local dev environment, requirements.txt.
 - **Success Metrics**: Environment runs without errors.
+- **Notes**: Created best-practice project structure with src/, data/, tests/, config/. Optimized for Mac M3 with MPS support. All dependencies specified in requirements.txt.
 
 ## Milestone 2: Data Ingestion for Prices
 - **Tasks**: Write script to fetch 5 years of Nasdaq-100 prices (Yahoo Finance). Store as CSV (open, high, low, close, volume).
