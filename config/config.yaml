@@ -1,0 +1,171 @@
+# Configuration file for SSL-Based Financial Prediction Platform
+
+project:
+  name: fpp-ssl
+  version: 0.1.0
+  description: SSL-Based Financial Prediction Platform
+
+data:
+  raw_dir: ./data/raw
+  processed_dir: ./data/processed
+  model_dir: ./data/models
+  
+  # Data sources
+  sources:
+    yahoo_finance:
+      enabled: true
+      lookback_years: 5
+    alpha_vantage:
+      enabled: true
+      max_articles_per_day: 2000
+    investing_com:
+      enabled: true
+      max_articles_per_day: 2000
+  
+  # Markets
+  markets:
+    - nasdaq-100
+    # - forex  # Milestone 27
+    # - sp-futures  # Milestone 27
+
+preprocessing:
+  news:
+    remove_html: true
+    remove_duplicates: true
+    min_length: 50  # Minimum article length in characters
+    max_length: 5000  # Maximum article length
+  
+  prices:
+    normalization: log-returns
+    technical_indicators:
+      - sma
+      - rsi
+      - macd
+  
+  sequences:
+    format: "News: {text}; Price: open={open}, high={high}, low={low}, close={close}, volume={volume}"
+    max_sequence_length: 512
+
+models:
+  # FinBERT configuration
+  finbert:
+    name: ProsusAI/finbert
+    quantization: null  # null, 4bit, 8bit
+    max_length: 512
+    
+  # Phi-3-mini configuration  
+  phi3:
+    name: microsoft/Phi-3-mini-4k-instruct
+    quantization: null
+    max_length: 4096
+    
+  # Gemma-3-4B configuration
+  gemma:
+    name: google/gemma-2-2b  # Using smaller variant for Mac
+    quantization: 4bit  # Required for Mac M3 with 16GB RAM
+    max_length: 8192
+
+training:
+  # SSL Pre-training
+  ssl:
+    mlm_probability: 0.15  # Mask 15% of tokens for MLM
+    contrastive_temperature: 0.07
+    epochs: 2
+    batch_size: 16
+    learning_rate: 1e-5
+    warmup_steps: 500
+    weight_decay: 0.01
+    gradient_accumulation_steps: 4
+    
+  # Fine-tuning
+  fine_tuning:
+    method: lora  # LoRA for efficient fine-tuning
+    lora_r: 8
+    lora_alpha: 32
+    lora_dropout: 0.1
+    epochs: 3
+    batch_size: 16
+    learning_rate: 2e-5
+    
+  # Incremental learning
+  incremental:
+    method: lora
+    update_frequency: daily
+    full_retrain_frequency: monthly
+    epochs: 1
+    batch_size: 16
+    learning_rate: 1e-5
+
+prediction:
+  # Classification for direction
+  direction:
+    classes:
+      - up
+      - down
+    
+  # Regression for % change buckets
+  change_buckets:
+    - "0-1%"
+    - "1-2%"
+    - "2-5%"
+    - ">5%"
+  
+  # Uncertainty estimation
+  uncertainty:
+    method: monte_carlo_dropout
+    n_samples: 10
+    dropout_rate: 0.1
+  
+  # Fallback logic
+  fallback:
+    min_articles: 100  # Use price-only predictions if <100 articles
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+  timeout: 30
+  cors:
+    enabled: true
+    origins:
+      - http://localhost:3000
+      - http://localhost:8501  # Streamlit default
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    - console
+    - file
+  file:
+    path: ./logs/app.log
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+
+monitoring:
+  wandb:
+    enabled: false  # Set to true when WANDB_API_KEY is set
+    project: fpp-ssl
+  
+  tensorboard:
+    enabled: true
+    log_dir: ./logs/tensorboard
+
+gcp:
+  # GCP deployment configuration (Milestone 26+)
+  project_id: null
+  region: us-central1
+  
+  cloud_run:
+    service_name: fpp-api
+    memory: 4Gi
+    cpu: 2
+    
+  bigquery:
+    dataset: fpp_data
+    
+  cloud_scheduler:
+    job_name: fpp-daily-update
+    schedule: "0 2 * * *"  # 2 AM daily
+    timezone: America/New_York
+

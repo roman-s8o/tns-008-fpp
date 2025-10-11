@@ -1,0 +1,83 @@
+# Core ML/DL Frameworks
+torch>=2.1.0  # PyTorch with Apple Silicon (MPS) support for M3
+torchvision>=0.16.0
+torchaudio>=2.1.0
+
+# Hugging Face Ecosystem
+transformers>=4.36.0  # For FinBERT, Gemma, Phi-3-mini
+datasets>=2.16.0  # For dataset management
+accelerate>=0.25.0  # For model optimization and training
+peft>=0.7.0  # For LoRA fine-tuning
+bitsandbytes>=0.41.0  # For 4-bit quantization (experimental on Mac)
+sentencepiece>=0.1.99  # For tokenization
+tokenizers>=0.15.0
+safetensors>=0.4.1  # For model serialization
+
+# API Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Data Processing
+pandas>=2.1.4
+numpy>=1.26.3
+scipy>=1.11.4
+
+# Financial Data
+yfinance>=0.2.35  # For Yahoo Finance data
+alpha-vantage>=2.3.1  # For Alpha Vantage API
+requests>=2.31.0  # For API calls
+beautifulsoup4>=4.12.3  # For web scraping (Investing.com)
+lxml>=5.1.0
+
+# Database
+sqlalchemy>=2.0.25
+aiosqlite>=0.19.0  # For async SQLite operations
+
+# NLP & Feature Extraction
+spacy>=3.7.2  # For NER
+scikit-learn>=1.3.2  # For LDA and ML utilities
+gensim>=4.3.2  # For topic modeling
+
+# Technical Analysis
+ta>=0.11.0  # For technical indicators (SMA, RSI, MACD)
+TA-Lib>=0.4.28  # Alternative technical analysis library
+
+# Utilities
+python-dotenv>=1.0.0  # For environment variables
+tqdm>=4.66.1  # For progress bars
+loguru>=0.7.2  # For better logging
+pyyaml>=6.0.1  # For config files
+hydra-core>=1.3.2  # For configuration management
+
+# Monitoring & Visualization
+wandb>=0.16.2  # For experiment tracking
+tensorboard>=2.15.1
+matplotlib>=3.8.2
+seaborn>=0.13.1
+plotly>=5.18.0
+
+# Optional Dashboard
+streamlit>=1.30.0  # For dashboard (Milestone 24)
+
+# Explainability
+shap>=0.44.1  # For SHAP values (Milestone 23)
+
+# Testing & Development
+pytest>=7.4.4
+pytest-asyncio>=0.23.3
+pytest-cov>=4.1.0
+httpx>=0.26.0  # For API testing
+
+# Code Quality
+black>=23.12.1
+flake8>=7.0.0
+mypy>=1.8.0
+pre-commit>=3.6.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.28.0
+ipywidgets>=8.1.1
+
