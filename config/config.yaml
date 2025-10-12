@@ -29,22 +29,54 @@ data:
     # - sp-futures  # Milestone 27
 
 preprocessing:
+  # Temporal alignment strategy
+  temporal_alignment: intraday  # News from day D -> same day D price movement
+  
+  # News preprocessing
   news:
     remove_html: true
     remove_duplicates: true
     min_length: 50  # Minimum article length in characters
-    max_length: 5000  # Maximum article length
+    max_article_length: 2000  # Max characters per article
+    include_metadata: true  # Include source, author, timestamp
+    use_summary_fallback: true  # Use title/summary when no full content
+    normalize_unicode: false
+    remove_urls: true
+    
+    # Multiple articles handling
+    concat_articles: true  # Concatenate all articles per ticker per day
+    article_separator: " [SEP] "  # Separator between articles
   
+  # Ticker specificity
+  ticker_matching:
+    use_ticker_specific: true  # Use ticker-specific news when available
+    use_market_fallback: true  # Use general market news as fallback
+    min_news_per_ticker: 5  # Minimum news articles for ticker inclusion
+  
+  # Price preprocessing
   prices:
-    normalization: log-returns
+    # Calculate log returns
+    calc_log_returns: true  # log(Close_t / Close_{t-1})
+    calc_ohlc_returns: true  # Open-to-close, High-low range
+    calc_volume_change: true  # Volume change percentage
+    
+    # Future technical indicators (Milestone 15)
     technical_indicators:
       - sma
       - rsi
       - macd
   
+  # Multimodal sequences
   sequences:
-    format: "News: {text}; Price: open={open}, high={high}, low={low}, close={close}, volume={volume}"
+    format: "News: {text}; Price: open={open}, high={high}, low={low}, close={close}, volume={volume}, returns={returns}"
     max_sequence_length: 512
+    
+  # Dataset sampling
+  sampling:
+    target_size: 10000  # Target number of sequences
+    strategy: random  # Options: random, stratified, recent
+    date_range_days: 365  # Use last N days (0 = all data)
+    require_both_news_and_price: true  # Only include sequences with both data
 
 models:
   # FinBERT configuration
