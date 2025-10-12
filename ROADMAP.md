@@ -9,10 +9,13 @@
 - **Success Metrics**: Environment runs without errors.
 - **Notes**: Created best-practice project structure with src/, data/, tests/, config/. Optimized for Mac M3 with MPS support. All dependencies specified in requirements.txt.
 
-## Milestone 2: Data Ingestion for Prices
+## Milestone 2: Data Ingestion for Prices ✅
+- **Status**: COMPLETED (Oct 12, 2025)
 - **Tasks**: Write script to fetch 5 years of Nasdaq-100 prices (Yahoo Finance). Store as CSV (open, high, low, close, volume).
 - **Deliverables**: Price ingestion script, sample CSV (~5 years data).
 - **Success Metrics**: 100% of Nasdaq-100 tickers downloaded.
+- **Results**: Downloaded 88/90 tickers (97.8%). 2 excluded tickers are legitimately delisted (ATVI, SGEN). Total: 109,646 rows covering Oct 2020 - Oct 2025.
+- **Notes**: Created `src/data_ingestion/fetch_prices.py`, `nasdaq_tickers.py`, `data_utils.py`. Automated script: `scripts/fetch_nasdaq_prices.py`. Fixed yfinance compatibility by upgrading to v0.2.66.
 
 ## Milestone 3: News Ingestion Pipeline
 - **Tasks**: Develop scripts to fetch news via Alpha Vantage and Investing.com APIs (up to 2000 articles/day). Handle API rate limits, store raw text in SQLite.
