@@ -49,10 +49,13 @@
 - **Results**: Successfully configured Gemma-3-270m with MPS optimization. Model loads successfully on Mac M3 (268M parameters, ~0.54GB in fp16). Created complete MLM training infrastructure with HuggingFace Trainer. Forward pass tested and verified. All scripts and documentation complete.
 - **Notes**: Started with Gemma-3-270m (270M params) instead of 4B for initial testing - better suited for 16GB RAM. BitsAndBytes 4-bit quantization requires CUDA; using float16 on MPS instead. System ready for MLM training (Milestone 7). Created `src/models/gemma/`, `src/training/mlm_trainer.py`, test and training scripts.
 
-## Milestone 7: SSL MLM Implementation
+## Milestone 7: SSL MLM Implementation ✅
+- **Status**: COMPLETED (Oct 13, 2025)
 - **Tasks**: Implement MLM (mask 15% tokens in news + prices). Tokenize dataset using FinBERT tokenizer. Test on small batch (100 samples).
 - **Deliverables**: MLM script, tokenized sample.
 - **Success Metrics**: MLM loss computed, no errors.
+- **Results**: Successfully implemented and trained FinBERT with MLM on all 139 training samples and 17 validation samples. Training completed in 14 minutes (3 epochs). Final train loss: 2.9259 (decreased from ~7.9). MLM successfully masks 15% of tokens (80% [MASK], 10% random, 10% original). Tokenized samples saved and verified. MPS acceleration working perfectly.
+- **Notes**: Created `src/models/finbert/` (config, model_loader, README), `src/training/finbert_mlm_trainer.py`, `scripts/train_finbert_mlm.py`, `scripts/test_finbert_model.py`. FinBERT (110M params) trained successfully on Mac M3 with batch size 16. Model and tokenized samples saved to `data/models/finbert/`. Upgraded accelerate to 1.10.1 for compatibility.
 
 ## Milestone 8: SSL Contrastive Learning
 - **Tasks**: Implement contrastive learning (positive pairs: news + matching prices; negative: mismatched). Use cosine similarity loss.
