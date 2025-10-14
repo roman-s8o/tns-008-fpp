@@ -57,10 +57,13 @@
 - **Results**: Successfully implemented and trained FinBERT with MLM on all 139 training samples and 17 validation samples. Training completed in 5:43 minutes (10 epochs). Final train loss: 1.29 (decreased from ~11.1). Final eval loss: 2.52 (57% improvement from 5.91 at epoch 2.78). Loss progression shows excellent convergence. MLM successfully masks 15% of tokens (80% [MASK], 10% random, 10% original). Tokenized samples saved and verified. MPS acceleration working perfectly.
 - **Notes**: Created `src/models/finbert/` (config, model_loader, README), `src/training/finbert_mlm_trainer.py`, `scripts/train_finbert_mlm.py`, `scripts/test_finbert_model.py`. FinBERT (110M params) trained successfully on Mac M3 with batch size 8 (reduced from 16 to avoid OOM during longer training). Model shows strong learning: loss decreased consistently from 11.1 → 1.29 across 10 epochs. Throughput: 4.05 samples/second. Model and tokenized samples saved to `data/models/finbert/`. Upgraded accelerate to 1.10.1 for compatibility.
 
-## Milestone 8: SSL Contrastive Learning
+## Milestone 8: SSL Contrastive Learning ✅
+- **Status**: COMPLETED (Oct 13, 2025)
 - **Tasks**: Implement contrastive learning (positive pairs: news + matching prices; negative: mismatched). Use cosine similarity loss.
 - **Deliverables**: Contrastive learning script.
 - **Success Metrics**: Loss decreases on sample batch.
+- **Results**: Successfully implemented and trained FinBERT with contrastive learning using NT-Xent (InfoNCE) loss. Training completed in ~4 minutes (10 epochs). Train loss decreased from 2.69 → 2.24. Eval loss stable at 1.95 (excellent generalization, no overfitting). Temperature scaling τ=0.07 effective. Projection head (768→256→128) learning good representations. Model trained on 139 train / 17 val samples.
+- **Notes**: Created projection head (`src/models/finbert/projection_head.py`), NT-Xent loss (`src/training/contrastive_loss.py`), contrastive trainer (`src/training/contrastive_trainer.py`), training script (`scripts/train_finbert_contrastive.py`). Used pre-trained FinBERT from Milestone 7 as starting point. Batch size 8, learning rate 1e-5. Contrastive pairs created by splitting batch. Model and checkpoints saved to `data/models/finbert_contrastive/`. Ready for embedding extraction and downstream tasks.
 
 ## Milestone 9: SSL Pre-training (FinBERT)
 - **Tasks**: Pre-train FinBERT on Nasdaq-100 dataset (80% train split). Epochs: 1–2, batch size: 16, learning rate: 1e-5.
