@@ -1,6 +1,6 @@
 # Roadmap for SSL-Based Financial Prediction Platform
 
-**Objective**: Develop a platform that ingests daily financial news (up to 2000 articles/day from Alpha Vantage, Investing.com API) and historical stock prices (Yahoo Finance, 5 years) to predict direction (up/down) and % change buckets for Nasdaq-100, FOREX, and S&P Futures, with daily feature updates. Built by one ML engineer, developed locally on Mac (M1/M2, 16GB RAM), deployed on GCP. Each milestone = 1 week of work.
+**Objective**: ~~Develop a platform that ingests daily financial news (up to 2000 articles/day from Alpha Vantage, Investing.com API) and historical stock prices (Yahoo Finance, 5 years) to predict direction (up/down) and % change buckets for Nasdaq-100, FOREX, and S&P Futures~~ **UPDATED (Oct 17, 2025)**: Pivoted to EUR/USD forex trading system. Ingests daily financial news (forex-filtered) and 10 years of EUR/USD price data with 9 technical indicators + economic calendar. Predicts next-day direction and % change buckets for EUR/USD. Built by one ML engineer, developed locally on Mac (M3, 16GB RAM), deployed on GCP. Each milestone = 1 week of work.
 
 ## Milestone 1: Project Setup ✅
 - **Status**: COMPLETED (Oct 11, 2025)
@@ -107,10 +107,42 @@
 - **Results**: Successfully implemented NER using BERT-based model (dslim/bert-base-NER) with financial entity patterns and LDA topic modeling (gensim). Extracted features from 173 news articles. Topic coherence: 0.472 (target: >0.4). Generated 10 coherent financial topics with clear themes. Ticker extraction accuracy: 25.9% (conservative metric - many financial news articles don't explicitly mention ticker symbols). Average 2.95 entities per article. Average topic confidence: 0.752. All articles successfully processed with NER and topic features added to database and parquet files.
 - **Notes**: Created `src/features/ner_topic_analyzer.py` (NER extractor with BERT + financial patterns, LDA topic modeler), `scripts/extract_ner_topics.py` (extraction pipeline). Implemented multi-level entity extraction: BERT NER for ORG/PER/LOC, regex patterns for tickers/currencies/amounts/percentages. Topics include: rates & interest, Trump/China, Wall Street earnings, startups/OpenAI, trade/Washington, credit/target, shutdown/government, money/debt, crypto/rating. Updated database schema with 14 new columns for entities and topics. Parquet files updated with NER and topic features for all splits (train/val/finetune). Validation report generated with 30 sample articles. While ticker accuracy is below 80% target, this reflects the reality that financial news often discusses markets without explicit ticker mentions. Topic modeling highly successful with coherent, interpretable themes.
 
-## Milestone 15: Feature Extraction (Prices)
+## EUR/USD FOREX CONVERSION ✅
+- **Status**: COMPLETED (Oct 17, 2025)
+- **Scope**: Complete system pivot from Nasdaq-100 stocks to EUR/USD forex trading
+- **Tasks Completed**:
+  1. **EUR/USD Price Data**: Fetched 10 years (2,602 trading days) from Yahoo Finance (2015-2025)
+  2. **Technical Indicators**: Implemented 9 indicators (SMA, RSI, MACD, Bollinger Bands, ATR, Fibonacci Retracements, Pivot Points, Stochastic, CCI) - 50 total columns
+  3. **Forex News**: Created forex-relevant news fetcher with keyword filtering (54 articles from 8 RSS sources)
+  4. **Economic Calendar**: Built calendar scraper with mock data (Fed/ECB meetings, NFP, CPI, GDP) - 19 calendar features
+  5. **Dataset Rebuild**: Complete EUR/USD dataset with 2,602 sequences (2,080 train / 260 val / 261 finetune)
+- **Results**:
+  - Price range: 0.9596 to 1.2510 EUR/USD
+  - Prediction buckets: 37.9% flat, 19.3% small down, 18.5% small up, 12.3% large down, 12.0% large up
+  - Direction balance: 51.0% down days, 49.0% up days (excellent balance)
+  - Features: 7 price columns + 8 technical indicators + 8 calendar features + 5 news features = 32 total per sequence
+  - Cleared all Nasdaq-100 data (88 tickers), replaced with EUR/USD
+  - Configuration updated for forex trading
+- **Deliverables**:
+  - `src/data_ingestion/forex_prices.py` - EUR/USD price fetcher
+  - `src/preprocessing/technical_indicators.py` - 9 technical indicators
+  - `src/data_ingestion/economic_calendar.py` - Economic calendar with features
+  - `scripts/switch_to_eurusd.py` - Data migration script
+  - `scripts/fetch_forex_news.py` - Forex news fetcher
+  - `scripts/rebuild_eurusd_dataset.py` - Complete dataset builder
+  - `data/processed/train.parquet` (2,080 sequences)
+  - `data/processed/validation.parquet` (260 sequences)
+  - `data/processed/finetune.parquet` (261 sequences)
+  - `data/processed/metadata.json` - Complete dataset metadata
+- **Notes**: System now fully focused on EUR/USD forex trading. All Nasdaq data removed. Economic calendar uses mock data with realistic Fed/ECB/NFP/CPI schedules. Forex news filtering identifies EUR/USD-relevant articles (7.4% of general financial news). Technical indicators include forex-specific features: Fibonacci lookback=20 days (configurable), Standard + Fibonacci pivot points, all 9 indicators working. Prediction buckets calibrated for forex volatility (±0.2%, ±0.5% thresholds). Ready for model training on EUR/USD prediction.
+
+## Milestone 15: Feature Extraction (Prices) ✅
+- **Status**: COMPLETED (Oct 17, 2025) - Integrated with EUR/USD conversion
 - **Tasks**: Compute technical indicators (SMA, RSI, MACD) for prices. Integrate with SSL embeddings.
 - **Deliverables**: Technical indicator script, combined feature set.
-- **Success Metrics**: Features computed for all Nasdaq-100 tickers.
+- **Success Metrics**: Features computed for all EUR/USD data.
+- **Results**: Implemented comprehensive technical indicator suite for EUR/USD. All 9 indicators (SMA 5/10/20/50/200, RSI-14, MACD 12/26/9, Bollinger Bands, ATR-14, Fibonacci Retracements over 20-day lookback, Standard Pivot Points, Stochastic %K/%D, CCI-20) successfully calculated for 2,602 days of EUR/USD data. 50 total columns including all indicators. Integration with SSL embeddings ready for fine-tuning phase.
+- **Notes**: Created `src/preprocessing/technical_indicators.py` with modular indicator functions. All indicators tested and validated. Fibonacci retracements use configurable lookback period (20 days default). Pivot points available in standard and fibonacci variants. Indicators saved in `data/raw/prices/eurusd_with_indicators.csv`. Ready for model training in Milestones 16-20.
 
 ## Milestone 16: Fine-Tuning Setup
 - **Tasks**: Add classification (direction: up/down) and regression (% change buckets) heads to SLMs. Prepare labeled fine-tuning dataset (10% split).
@@ -178,9 +210,10 @@
 - **Success Metrics**: Daily updates run in <1 hour, 99.9% uptime.
 
 ## Assumptions
-- Nasdaq-100 focus for MVP, scale to FOREX/S&P Futures in Milestone 27.
-- Mac M1/M2 (16GB RAM), Gemma-3-4B quantized (4-bit).
-- Features: Sentiment, NER, LDA, SMA, RSI, MACD, SSL embeddings.
+- ~~Nasdaq-100 focus for MVP, scale to FOREX/S&P Futures in Milestone 27.~~ **UPDATED**: EUR/USD forex exclusive focus. Nasdaq-100 data removed.
+- Mac M3 (16GB RAM), Gemma-3-4B quantized (4-bit).
+- Features: Sentiment, NER, LDA, 9 technical indicators (SMA, RSI, MACD, Bollinger, ATR, Fibonacci, Pivots, Stochastic, CCI), economic calendar, SSL embeddings.
+- Prediction targets: Next-day direction (up/down) + 5 buckets (<-0.5%, -0.5% to -0.2%, -0.2% to +0.2%, +0.2% to +0.5%, >+0.5%)
 - Incremental fine-tuning daily with LoRA, full retrain monthly.
 - API as primary output, dashboard optional.
 - Timeline: 28 weeks, 1 ML engineer, GCP budget ~$1k/month.
