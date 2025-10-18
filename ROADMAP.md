@@ -144,10 +144,13 @@
 - **Results**: Implemented comprehensive technical indicator suite for EUR/USD. All 9 indicators (SMA 5/10/20/50/200, RSI-14, MACD 12/26/9, Bollinger Bands, ATR-14, Fibonacci Retracements over 20-day lookback, Standard Pivot Points, Stochastic %K/%D, CCI-20) successfully calculated for 2,602 days of EUR/USD data. 50 total columns including all indicators. Integration with SSL embeddings ready for fine-tuning phase.
 - **Notes**: Created `src/preprocessing/technical_indicators.py` with modular indicator functions. All indicators tested and validated. Fibonacci retracements use configurable lookback period (20 days default). Pivot points available in standard and fibonacci variants. Indicators saved in `data/raw/prices/eurusd_with_indicators.csv`. Ready for model training in Milestones 16-20.
 
-## Milestone 16: Fine-Tuning Setup
+## Milestone 16: Fine-Tuning Setup ✅
+- **Status**: COMPLETED (Oct 17, 2025)
 - **Tasks**: Add classification (direction: up/down) and regression (% change buckets) heads to SLMs. Prepare labeled fine-tuning dataset (10% split).
 - **Deliverables**: Fine-tuning script, labeled dataset.
 - **Success Metrics**: Dataset ready, heads initialized.
+- **Results**: Successfully implemented complete fine-tuning infrastructure for EUR/USD forex prediction. Multi-task head predicts both direction (binary: up/down) and bucket (5 classes: large_down, small_down, flat, small_up, large_up). LoRA configuration applied with r=16, alpha=32 targeting all attention layers (query, key, value, dense). Trainable parameters: 2.94M/112M (2.62%). EUR/USD dataset prepared with 2,080 train / 260 validation / 261 finetune sequences. Text formatted with structured tags: [NEWS] [PRICE] [IND] [CAL]. Numerical features normalized with z-score. Multi-task loss: 50/50 weighting (direction + bucket). Training hyperparameters: 30 epochs, batch=16, lr=2e-5, warmup=10%. Test run (100 samples, 3 epochs) achieved 45% direction accuracy, 30% bucket accuracy, MAE=0.950.
+- **Notes**: Created `src/models/finbert/finetune_head.py` (multi-task classification head), `src/preprocessing/forex_preprocessor.py` (data preprocessing with normalization, NaN handling, structured text formatting), `src/training/forex_finetune_trainer.py` (LoRA trainer with multi-task loss), `scripts/finetune_finbert_eurusd.py` (complete fine-tuning pipeline). System tracks: direction accuracy, bucket accuracy, bucket MAE, precision, recall, F1. Ready for full-scale fine-tuning in Milestone 17. Model architecture: FinBERT (110M) → [CLS] → Shared(256) → Direction Head(2) + Bucket Head(5). LoRA enables efficient daily incremental updates (Milestone 21). Checkpoint saving every 10 epochs + best model. Training history saved to JSON.
 
 ## Milestone 17: Fine-Tuning (FinBERT)
 - **Tasks**: Fine-tune FinBERT with LoRA (direction + % change). Use MSE for regression, Cross-Entropy for classification.
