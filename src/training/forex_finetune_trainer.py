@@ -184,6 +184,12 @@ class ForexFineTuneTrainer:
             'bucket_mae': [],
         }
         
+        # Early stopping
+        self.early_stopping_patience = 3
+        self.best_val_loss = float('inf')
+        self.patience_counter = 0
+        self.early_stopped = False
+        
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
@@ -192,6 +198,7 @@ class ForexFineTuneTrainer:
         logger.info(f"  - Batch size: {batch_size}")
         logger.info(f"  - Learning rate: {learning_rate}")
         logger.info(f"  - LoRA: {use_lora}")
+        logger.info(f"  - Early stopping patience: {self.early_stopping_patience}")
         logger.info(f"  - Device: {device}")
     
     def _setup_lora(self, r: int = 16, alpha: int = 32):
@@ -375,15 +382,26 @@ class ForexFineTuneTrainer:
                 self.save_checkpoint(epoch, is_best=True)
                 logger.info(f"  ✓ New best model saved (direction acc: {best_direction_acc:.1%})")
             
-            # Save periodic checkpoints
-            if epoch % 10 == 0:
-                self.save_checkpoint(epoch, is_best=False)
+            # Early stopping check
+            if val_metrics['val_loss'] < self.best_val_loss:
+                self.best_val_loss = val_metrics['val_loss']
+                self.patience_counter = 0
+            else:
+                self.patience_counter += 1
+                logger.info(f"  ⚠ No improvement for {self.patience_counter}/{self.early_stopping_patience} epochs")
+                
+                if self.patience_counter >= self.early_stopping_patience:
+                    logger.info(f"  🛑 Early stopping triggered at epoch {epoch}")
+                    self.early_stopped = True
+                    break
         
         logger.info("\n" + "="*60)
         logger.info("Training Complete!")
         logger.info("="*60)
         logger.info(f"Best Direction Accuracy: {best_direction_acc:.1%}")
         logger.info(f"Best Val Loss: {best_val_loss:.4f}")
+        if self.early_stopped:
+            logger.info(f"Early stopped at epoch {epoch} (patience={self.early_stopping_patience})")
         
         # Save training history
         self.save_history()
