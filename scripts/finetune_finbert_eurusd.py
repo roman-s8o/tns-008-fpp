@@ -33,6 +33,7 @@ os.environ['USE_TF'] = 'NO'
 
 import torch
 import pandas as pd
+import pickle
 from transformers import AutoTokenizer
 
 from src.models.finbert.finetune_head import FinBERTForexPredictor
@@ -94,29 +95,53 @@ def main():
         logger.info(f"  - Device: CPU")
     
     try:
-        # Load datasets
-        logger.info("\n📊 Loading EUR/USD datasets...")
-        if args.test_run:
-            train_df = pd.read_parquet('data/processed/train.parquet')[:100]
-            val_df = pd.read_parquet('data/processed/validation.parquet')[:20]
-            logger.info("  TEST RUN: Using small subset")
+        # Check for cached preprocessed data
+        cache_file = Path('data/processed/cached_preprocessed.pkl')
+        
+        if not args.test_run and cache_file.exists():
+            logger.info("\n📊 Loading cached preprocessed data...")
+            with open(cache_file, 'rb') as f:
+                cache = pickle.load(f)
+            
+            train_texts = cache['train_texts']
+            train_direction = cache['train_direction']
+            train_bucket = cache['train_bucket']
+            val_texts = cache['val_texts']
+            val_direction = cache['val_direction']
+            val_bucket = cache['val_bucket']
+            
+            logger.info(f"  ✓ Train: {len(train_texts)} sequences (cached)")
+            logger.info(f"  ✓ Val: {len(val_texts)} sequences (cached)")
+            
         else:
-            train_df = pd.read_parquet('data/processed/train.parquet')
-            val_df = pd.read_parquet('data/processed/validation.parquet')
-        
-        logger.info(f"  ✓ Train: {len(train_df)} sequences")
-        logger.info(f"  ✓ Val: {len(val_df)} sequences")
-        
-        # Preprocess data
-        logger.info("\n🔧 Preprocessing data...")
-        preprocessor = ForexDataPreprocessor(
-            normalize_features=True,
-            fill_nan_strategy='mean'
-        )
-        
-        train_processed, train_texts = preprocessor.prepare_dataset(train_df, fit=True)
-        val_processed, val_texts = preprocessor.prepare_dataset(val_df, fit=False)
-        logger.info("  ✓ Data preprocessed")
+            # Load datasets
+            logger.info("\n📊 Loading EUR/USD datasets...")
+            if args.test_run:
+                train_df = pd.read_parquet('data/processed/train.parquet')[:100]
+                val_df = pd.read_parquet('data/processed/validation.parquet')[:20]
+                logger.info("  TEST RUN: Using small subset")
+            else:
+                train_df = pd.read_parquet('data/processed/train.parquet')
+                val_df = pd.read_parquet('data/processed/validation.parquet')
+            
+            logger.info(f"  ✓ Train: {len(train_df)} sequences")
+            logger.info(f"  ✓ Val: {len(val_df)} sequences")
+            
+            # Preprocess data
+            logger.info("\n🔧 Preprocessing data...")
+            preprocessor = ForexDataPreprocessor(
+                normalize_features=True,
+                fill_nan_strategy='mean'
+            )
+            
+            train_processed, train_texts = preprocessor.prepare_dataset(train_df, fit=True)
+            val_processed, val_texts = preprocessor.prepare_dataset(val_df, fit=False)
+            logger.info("  ✓ Data preprocessed")
+            
+            train_direction = train_processed['direction_label'].values
+            train_bucket = train_processed['bucket_label'].values
+            val_direction = val_processed['direction_label'].values
+            val_bucket = val_processed['bucket_label'].values
         
         # Create datasets
         logger.info("\n📝 Creating PyTorch datasets...")
@@ -124,15 +149,15 @@ def main():
         
         train_dataset = ForexDataset(
             texts=train_texts,
-            direction_labels=train_processed['direction_label'].values,
-            bucket_labels=train_processed['bucket_label'].values,
+            direction_labels=train_direction,
+            bucket_labels=train_bucket,
             tokenizer=tokenizer,
         )
         
         val_dataset = ForexDataset(
             texts=val_texts,
-            direction_labels=val_processed['direction_label'].values,
-            bucket_labels=val_processed['bucket_label'].values,
+            direction_labels=val_direction,
+            bucket_labels=val_bucket,
             tokenizer=tokenizer,
         )
         logger.info(f"  ✓ Datasets created")

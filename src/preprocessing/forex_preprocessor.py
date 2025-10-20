@@ -109,6 +109,60 @@ class ForexDataPreprocessor:
         
         return " ".join(parts)
     
+    def _batch_format_text(self, df: pd.DataFrame) -> List[str]:
+        """
+        Fast batch text formatting (vectorized).
+        
+        Args:
+            df: DataFrame with sequences
+            
+        Returns:
+            List of formatted texts
+        """
+        texts = []
+        
+        # Pre-compute common values
+        news_texts = df['news_text'].fillna('').values
+        closes = df['close'].fillna(0).values
+        pips = df['pips_change'].fillna(0).values
+        
+        # Indicators
+        rsi = df['rsi_14'].fillna(0).values
+        macd = df['macd'].fillna(0).values
+        bb = df['bb_percent'].fillna(0).values
+        
+        # Calendar
+        fed_today = df['fed_today'].fillna(0).values
+        ecb_today = df['ecb_today'].fillna(0).values
+        nfp_today = df['nfp_today'].fillna(0).values
+        
+        for i in range(len(df)):
+            # NEWS
+            news = news_texts[i][:200] if news_texts[i] else "No news today"
+            news_part = f"[NEWS] {news}"
+            
+            # PRICE
+            direction = "up" if pips[i] > 0 else "down"
+            price_part = f"[PRICE] EUR/USD: {closes[i]:.4f} {direction} {abs(pips[i]):.1f} pips"
+            
+            # INDICATORS
+            ind_part = f"[IND] RSI:{rsi[i]:.1f} MACD:{macd[i]:.4f} BB:{bb[i]:.2f}"
+            
+            # CALENDAR
+            events = []
+            if fed_today[i] == 1:
+                events.append("Fed meeting")
+            if ecb_today[i] == 1:
+                events.append("ECB meeting")
+            if nfp_today[i] == 1:
+                events.append("NFP release")
+            
+            cal_part = f"[CAL] {', '.join(events)}" if events else "[CAL] No major events"
+            
+            texts.append(f"{news_part} {price_part} {ind_part} {cal_part}")
+        
+        return texts
+    
     def normalize_numerical_features(
         self,
         df: pd.DataFrame,
@@ -216,11 +270,9 @@ class ForexDataPreprocessor:
             df = self.normalize_numerical_features(df, feature_cols)
             logger.info("  ✓ Normalized features")
         
-        # Format text
-        formatted_texts = []
-        for _, row in df.iterrows():
-            text = self.format_text_with_tags(row)
-            formatted_texts.append(text)
+        # Format text (vectorized for speed)
+        logger.info("  Formatting text sequences...")
+        formatted_texts = self._batch_format_text(df)
         
         logger.info("  ✓ Formatted text sequences")
         
